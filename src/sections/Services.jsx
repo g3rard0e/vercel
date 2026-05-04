@@ -7,7 +7,7 @@ const services = [
     icon: Network,
     title: 'Network Infrastructure',
     desc: 'Firewall, router, switch, and Wi-Fi setup for offices of any size. Structured cabling, VLANs, VPNs, and everything in between.',
-    tags: ['FortiGate', 'Meraki', 'Ubiquiti', 'MikroTik'],
+    tags: ['FortiGate', 'Meraki', 'Ubiquiti', 'WatchGuard'],
     color: '#00d4ff',
   },
   {
