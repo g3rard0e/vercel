@@ -1,7 +1,7 @@
 import './About.css'
 
 const stack = [
-  'Meraki', 'FortiGate', 'Palo Alto', 'WatchGuard', 'MikroTik', 'Ubiquiti',
+  'Meraki', 'FortiGate', 'Palo Alto', 'WatchGuard', 'Ubiquiti',
   'Microsoft 365', 'Azure', 'Intune', 'Sophos', 'ThreatLocker',
   'Acronis', 'Veeam', 'VMware', 'Hyper-V', 'Proxmox',
   'ConnectWise', 'NinjaRMM', 'ITGlue',
@@ -10,7 +10,9 @@ const stack = [
 const certs = [
   { name: 'CompTIA Network+', status: 'active' },
   { name: 'MS-900', status: 'active' },
-  { name: 'CompTIA Security+', status: 'in-progress' },
+  { name: 'CompTIA Security+', status: 'active' },
+  { name: 'Acronis Cyber Protect Associate', status: 'active' },
+  { name: 'NSE 1, 2, 3, 4...', status: 'in-progress' },
 ]
 
 export default function About() {
