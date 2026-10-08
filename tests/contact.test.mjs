@@ -1,7 +1,7 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import { createContactHandler, readLimitedBody, MAX_BODY_BYTES } from '../lib/contact.js'
-const env = { MS_TENANT_ID: 'tenant', MS_CLIENT_ID: 'client', MS_CLIENT_SECRET: 'TEST_SECRET_NOT_REAL', MS_FROM_EMAIL: 'contact@example.test' }
+const env = { ALLOWED_ORIGINS: 'https://example.test', MS_TENANT_ID: 'tenant', MS_CLIENT_ID: 'client', MS_CLIENT_SECRET: 'TEST_SECRET_NOT_REAL', MS_FROM_EMAIL: 'contact@example.test' }
 const valid = { name: 'Example User', email: 'visitor@example.test', phone: '', service: 'Other', message: 'Please contact me.', website: '', elapsedMs: 4000 }
 function setup(extra = {}) {
   const calls = [], logs = []
@@ -129,7 +129,7 @@ test('provider errors do not expose secret response content or trigger send retr
 })
 test('missing server configuration is generic and does not call providers', async () => {
   const { send, calls } = setup()
-  assert.equal((await send(valid, {}, {})).status, 503)
+  assert.equal((await send(valid, {}, { ALLOWED_ORIGINS: env.ALLOWED_ORIGINS })).status, 503)
   assert.equal(calls.length, 0)
 })
 test('configured Turnstile fails closed when token missing', async () => {
@@ -150,4 +150,38 @@ test('frontend-only Turnstile configuration does not bypass server verification'
   const { send, calls } = setup()
   assert.equal((await send({ ...valid, turnstileToken: 'test' })).status, 503)
   assert.equal(calls.length, 0)
+})
+
+test('rejects invalid phone and quoted/markup email formats', async () => {
+  for (const fields of [{ ...valid, phone: '<script>' }, { ...valid, email: '"bad"@example.test' }]) {
+    const { send, calls } = setup()
+    assert.equal((await send(fields)).status, 400)
+    assert.equal(calls.length, 0)
+  }
+})
+test('normalizes Unicode and rejects noncanonical origins', async () => {
+  const { send, calls } = setup()
+  assert.equal((await send({ ...valid, name: '  Jose\u0301  ' })).status, 200)
+  assert.equal(JSON.parse(calls[1].options.body).message.replyTo[0].emailAddress.name, 'José')
+  const headers = new Headers({ 'Content-Type':'application/json', Origin:'https://example.test/path', 'X-Geamy-Form':'contact-v3' })
+  assert.equal((await send(valid, { headers })).status, 403)
+})
+test('default origins do not trust request host; API responses retain security headers', async () => {
+  const settings = { ...env }; delete settings.ALLOWED_ORIGINS
+  const { send } = setup()
+  const denied = await send(valid, {}, settings)
+  assert.equal(denied.status, 403)
+  assert.equal(denied.headers.get('cache-control'), 'no-store')
+  assert.ok(denied.headers.get('content-security-policy').includes("default-src 'none'"))
+})
+
+test('Vercel Web adapter rejects methods and raw oversized streams', async () => {
+  const { default: adapter } = await import('../api/contact.js')
+  assert.equal((await adapter.fetch(new Request('https://geamyservices.com/api/contact'))).status, 405)
+  const response = await adapter.fetch(new Request('https://geamyservices.com/api/contact', {
+    method: 'POST', headers: { Origin: 'https://geamyservices.com', 'Content-Type': 'application/json', 'X-Geamy-Form': 'contact-v3' },
+    body: ' '.repeat(MAX_BODY_BYTES + 1),
+  }))
+  assert.equal(response.status, 413)
+  assert.equal(response.headers.get('cache-control'), 'no-store')
 })
