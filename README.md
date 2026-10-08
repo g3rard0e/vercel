@@ -58,3 +58,13 @@ configuration when the challenge is enabled. CAPTCHA is not enabled merely by
 merging this code: real keys must be configured outside GitHub.
 
 See `SECURITY.md` for controls, platform requirements, limitations and rotation.
+
+## Follow-up validation and platform notes
+
+Use Node 22.12+ (22 LTS recommended). Vite uses the native JavaScript config loader. Dependencies were updated to address the audit findings, and the unused Resend SDK was removed.
+
+GitHub deploys both Vercel (`project-97cwd`) and Cloudflare Pages (`geamy-services`). `www.geamyservices.com` was observed serving byte-identical HTML to Pages; the apex returned a Vercel security challenge through Cloudflare. Verify both hostnames independently. The existing `Workers Builds: vercel` failure is a separate integration.
+
+Both runtimes limit the actual body byte stream before parsing. Pages `_routes.json` restricts function invocation to `/api/*`. Without `ALLOWED_ORIGINS`, only `https://geamyservices.com` and `https://www.geamyservices.com` are trusted. Configure exact preview origins explicitly; entries must be HTTPS origins without paths or trailing slashes (HTTP localhost is allowed for local development). Origin is an anti-abuse check, not authentication.
+
+All API responses include no-store and defensive headers. Text is normalized to NFC and escaped for HTML; phone format is validated. Mail delivery tests mock Graph; a successful live API submission establishes Graph acceptance, not inbox delivery.
