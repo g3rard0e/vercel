@@ -11,7 +11,7 @@ export default function Hero() {
             <h1 className="hero-title">Your business.<br />Connected.<br /><span>In full motion.</span></h1>
             <p className="hero-sub">Networks. Cloud. Security. Cameras. Websites.<br />The systems behind your next chapter, connected by one technology partner.</p>
             <div className="hero-actions">
-              <a className="btn-primary" href="#services">Explore the possibilities <span>&nearr;</span></a>
+              <a className="btn-primary" href="#services">Explore the possibilities <span>↗</span></a>
               <a className="hero-explore" href="#contact">Let's build something <span>&rarr;</span></a>
             </div>
             <div className="hero-stats" aria-label="Geamy Services experience">
@@ -23,7 +23,7 @@ export default function Hero() {
           <div className="hero-right">
             <div className="hero-art-label"><span>YOUR BUSINESS, REIMAGINED</span><span>01 &mdash; 08</span></div>
             <geamy-universe aria-label="Interactive map of Geamy services" />
-            <div className="hero-art-footer"><span>CHOOSE A SPECIALTY TO EXPLORE</span><a href="#journey">Inside the network &nearr;</a></div>
+            <div className="hero-art-footer"><span>CHOOSE A SPECIALTY TO EXPLORE</span><a href="#journey">Inside the network ↗</a></div>
           </div>
         </div>
         <div className="hero-bottom"><span>FROM THE FIRST CONNECTION TO WHAT COMES NEXT.</span><a href="#services">SCROLL. EXPLORE. IMAGINE. &darr;</a></div>
