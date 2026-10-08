@@ -2,13 +2,16 @@ import { useEffect } from 'react'
 import Navbar from './components/Navbar'
 import Footer from './components/Footer'
 import Hero from './sections/Hero'
-import Services from './sections/Services'
 import About from './sections/About'
 import Terms from './sections/Terms'
 import Contact from './sections/Contact'
 import './components/NetworkJourney.js'
 import './components/NetworkJourney.css'
+import './sections/Services.css'
+import './components/ServiceExperience.js'
+import './components/ServiceExperience.css'
 import './motion.css'
+import './experience-layout.css'
 
 export default function App() {
   useEffect(() => {
@@ -25,12 +28,15 @@ export default function App() {
     <>
       <a className="skip-link" href="#main">Skip to content</a>
       <Navbar />
-      <main id="main" style={{ position: 'relative', zIndex: 1 }}>
+      <main id="main" className="gx-page" style={{ position: 'relative', zIndex: 1 }}>
         <Hero />
+        <geamy-experiences id="services" />
+        <div className="gx-deep-dive"><span>GO ONE LAYER DEEPER</span><h2>Follow a single connection.</h2><p>Scroll through the hardware behind the experience, or continue to meet Geamy.</p><a href="#about">Meet your technology partner &darr;</a></div>
         <network-journey id="journey" />
-        <Services /><About /><Terms /><Contact />
+        <About /><Terms /><Contact />
       </main>
       <Footer />
+      <div className="gx-global-motion"><geamy-motion /></div>
     </>
   )
 }
