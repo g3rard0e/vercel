@@ -1,0 +1,45 @@
+network-journey,network-preview{display:block;position:relative}
+network-journey{height:440vh;isolation:isolate;background:#060b13;border-block:1px solid rgba(141,220,237,.15)}
+.nj-film{height:100%;position:relative}
+.nj-viewport{position:sticky;top:0;height:100svh;min-height:620px;overflow:hidden;background:#060b13}
+.nj-canvas{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:pan-y}
+.nj-preview-canvas{display:block;width:100%;height:100%;min-height:420px}
+.nj-top{position:absolute;top:104px;left:5.5%;right:5.5%;display:flex;justify-content:space-between;gap:12px;font-size:10px;letter-spacing:.19em;color:#8cabbc;pointer-events:none}
+.nj-simulation{color:#537789}
+.nj-story{position:absolute;top:29%;left:6%;width:28%;max-width:380px;pointer-events:none}
+.nj-kicker{font-size:10px;letter-spacing:.16em;color:#81dbe9;display:block;margin-bottom:28px}
+.nj-chapter{font-size:12px;color:#527f92;letter-spacing:.18em;margin-bottom:13px}
+.nj-title{font-family:var(--font-display,sans-serif);font-size:clamp(30px,3.1vw,54px);letter-spacing:-.045em;line-height:1.04;color:#edf5f9;margin:0 0 20px;max-width:370px}
+.nj-description{font-size:13px;line-height:1.8;color:#92a8b7;margin:0}
+.nj-tags{font-size:10px;line-height:1.8;letter-spacing:.025em;color:#60b5c7;margin-top:24px}
+.nj-bottom{position:absolute;bottom:32px;left:6%;right:6%}
+.nj-controls{display:flex;align-items:center;gap:24px;margin-bottom:22px;font-size:11px}
+.nj-instruction{color:#8fabb8;margin-right:auto;letter-spacing:.03em}
+.nj-controls button,.nj-controls a{color:#aec7d1;background:transparent;border:0;font:inherit;text-decoration:underline;text-decoration-color:#365464;text-underline-offset:6px;padding:8px 0;cursor:pointer}
+.nj-controls button:hover,.nj-controls a:hover{color:#8df1ff}
+.nj-stages{display:grid;grid-template-columns:repeat(6,1fr);gap:1px;border-top:1px solid #203642;padding-top:18px}
+.nj-stages button{display:flex;align-items:center;gap:12px;min-height:44px;background:none;border:0;border-radius:3px;color:#7a98a7;text-align:left;font:12px var(--font-mono,monospace);cursor:pointer;transition:color .2s}
+.nj-stages button span{font-size:10px;color:#446171}
+.nj-stages button[aria-pressed=true]{color:#b0f6ff}
+.nj-stages button[aria-pressed=true] span{color:#75dae9}
+.nj-stages button:focus-visible,.nj-controls :focus-visible{outline:2px solid #77d7ef;outline-offset:5px}
+.nj-track{height:2px;margin-top:16px;background:#152831}
+.nj-track span{height:100%;display:block;background:#6adaed;transform:scaleX(0);transform-origin:left;box-shadow:0 0 14px #6adaed}
+network-journey[data-still]{height:auto;min-height:780px}
+network-journey[data-still] .nj-viewport{position:relative;height:780px}
+network-journey[data-fallback] .nj-canvas{display:none}
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+@media(max-width:900px){
+ .nj-top{top:86px;font-size:8px}.nj-story{left:5%;width:34%;top:25%}.nj-title{font-size:34px}.nj-description{font-size:12px}.nj-bottom{left:5%;right:5%}.nj-stages button{font-size:10px;gap:7px}.nj-controls{gap:14px;font-size:10px}
+}
+@media(max-width:650px){
+ network-journey{height:340vh}.nj-viewport{min-height:690px}.nj-top{top:83px;left:6%;right:6%;font-size:8px}.nj-simulation{display:none}
+ .nj-story{left:6%;right:6%;width:auto;top:119px;max-width:none}.nj-kicker{font-size:8px;margin-bottom:12px}.nj-chapter{position:absolute;right:0;top:0;font-size:9px}
+ .nj-title{font-size:32px;max-width:310px;margin-bottom:11px}.nj-description{max-width:340px;font-size:11px;line-height:1.65}.nj-tags{display:none}
+ .nj-bottom{left:6%;right:6%;bottom:24px}.nj-controls{flex-wrap:wrap;gap:6px 18px;margin-bottom:12px}.nj-instruction{width:100%;font-size:9px}
+ .nj-stages{grid-template-columns:repeat(3,1fr);gap:6px;padding-top:10px}.nj-stages button{font-size:10px;min-height:38px}.nj-track{margin-top:12px}
+ network-journey[data-still],network-journey[data-still] .nj-viewport{min-height:740px;height:740px}
+ .nj-preview-canvas{min-height:320px}
+}
+@media(max-height:660px) and (min-width:651px){.nj-top{top:78px}.nj-story{top:23%}.nj-kicker{margin-bottom:12px}.nj-title{font-size:32px}.nj-description{font-size:11px}.nj-tags{margin-top:10px}.nj-bottom{bottom:20px}.nj-controls{margin-bottom:10px}}
+

@@ -1,47 +1,24 @@
 import { useState, useEffect } from 'react'
 import './Navbar.css'
-
-const links = ['Services', 'About', 'Terms', 'Contact']
-
+const links = ['Journey', 'Services', 'About', 'Terms', 'Contact']
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
-
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 40)
-    window.addEventListener('scroll', onScroll)
-    return () => window.removeEventListener('scroll', onScroll)
+    const onKey = e => { if (e.key === 'Escape') setMenuOpen(false) }
+    onScroll(); window.addEventListener('scroll', onScroll, { passive: true }); window.addEventListener('keydown', onKey)
+    return () => { window.removeEventListener('scroll', onScroll); window.removeEventListener('keydown', onKey) }
   }, [])
-
-  const handleNav = (e, id) => {
-    e.preventDefault()
-    setMenuOpen(false)
-    document.getElementById(id.toLowerCase())?.scrollIntoView({ behavior: 'smooth' })
-  }
-
   return (
-    <nav className={`navbar ${scrolled ? 'scrolled' : ''}`}>
+    <nav className={`navbar ${scrolled ? 'scrolled' : ''}`} aria-label="Main navigation">
       <div className="navbar-inner container">
-        <a href="#" className="navbar-logo" onClick={e => { e.preventDefault(); window.scrollTo({top:0,behavior:'smooth'}) }}>
-          <span className="logo-bracket">[</span>
-          <span className="logo-text">GEAMY</span>
-          <span className="logo-bracket">]</span>
-        </a>
-
-        <div className={`navbar-links ${menuOpen ? 'open' : ''}`}>
-          {links.map(l => (
-            <a key={l} href={`#${l.toLowerCase()}`} onClick={e => handleNav(e, l)} className="nav-link">
-              <span className="nav-link-num">/ </span>{l}
-            </a>
-          ))}
-          <a href="#contact" onClick={e => handleNav(e, 'Contact')} className="nav-cta">
-            Get a Quote
-          </a>
+        <a href="#home" className="navbar-logo" onClick={() => setMenuOpen(false)} aria-label="Geamy Services home"><span className="logo-bracket">[</span><span className="logo-text">GEAMY</span><span className="logo-bracket">]</span></a>
+        <div id="main-navigation" className={`navbar-links ${menuOpen ? 'open' : ''}`}>
+          {links.map(label => <a key={label} href={`#${label.toLowerCase()}`} onClick={() => setMenuOpen(false)} className="nav-link"><span className="nav-link-num">/ </span>{label}</a>)}
+          <a href="#contact" onClick={() => setMenuOpen(false)} className="nav-cta">Get a Quote</a>
         </div>
-
-        <button className={`hamburger ${menuOpen ? 'open' : ''}`} onClick={() => setMenuOpen(!menuOpen)} aria-label="Menu">
-          <span/><span/><span/>
-        </button>
+        <button type="button" className={`hamburger ${menuOpen ? 'open' : ''}`} onClick={() => setMenuOpen(value => !value)} aria-label={menuOpen ? 'Close menu' : 'Open menu'} aria-controls="main-navigation" aria-expanded={menuOpen}><span/><span/><span/></button>
       </div>
     </nav>
   )

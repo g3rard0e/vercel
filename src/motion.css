@@ -1,0 +1,21 @@
+/* Keep native pointers and keyboard focus. No hidden cursor or global RAF loop. */
+html body{cursor:auto!important}html button,html a{cursor:pointer!important}
+html{scroll-padding-top:90px}a,button,input,select,textarea{-webkit-tap-highlight-color:rgba(110,218,237,.15)}
+:focus-visible{outline:2px solid #8ee4f2;outline-offset:5px}
+.skip-link{position:fixed;z-index:10001;top:10px;left:10px;padding:12px 20px;background:#afeafa;color:#071720;transform:translateY(-160%)}
+.skip-link:focus{transform:translateY(0)}
+html .hamburger{position:relative;z-index:102;padding:12px}
+html .service-card:focus-within{outline:2px solid #8ee4f2}
+html .contact-form input,html .contact-form textarea,html .contact-form select{font-size:16px}
+html .contact-form label{color:#aec0cc}
+.contact-status{color:#e3b2b2;font-size:12px;line-height:1.6}
+.contact-privacy{font-size:11px;line-height:1.7;color:#8198a8}
+.contact-trap{position:absolute!important;left:-10000px!important;top:auto!important;width:1px!important;height:1px!important;overflow:hidden!important}
+.contact-verify{min-height:65px;max-width:100%}
+html[data-motion=off]{scroll-behavior:auto!important}
+html[data-motion=off] *,html[data-motion=off] *::before,html[data-motion=off] *::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}
+html[data-motion=off] .service-card{transform:none!important}
+@media(prefers-reduced-motion:reduce){
+ html{scroll-behavior:auto!important}*,*::before,*::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}
+ .reveal,.reveal-left,.reveal-right{opacity:1!important;transform:none!important}.service-card{transform:none!important}
+}
