@@ -12,7 +12,21 @@ export default function InternetWorld() {
   const paused = localPaused || globalPaused
   const [radar, setRadar] = useState({ state: 'loading', locations: [] })
   const [reduced, setReduced] = useState(false), [expanded, setExpanded] = useState(false)
-  useEffect(() => { const change = () => setExpanded(document.fullscreenElement === consoleRef.current); document.addEventListener('fullscreenchange', change); return () => document.removeEventListener('fullscreenchange', change) }, [])
+  useEffect(() => {
+    if (!expanded) return
+    const previousFocus = document.activeElement, previousOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'; consoleRef.current.focus()
+    const key = e => {
+      if(e.key === 'Escape') { setExpanded(false); return }
+      if(e.key !== 'Tab') return
+      const controls = [...consoleRef.current.querySelectorAll('button:not(:disabled), input, select, canvas[tabindex]')]
+      const first = controls[0], last = controls[controls.length - 1]
+      if(e.shiftKey && (document.activeElement === first || document.activeElement === consoleRef.current)) { e.preventDefault(); last?.focus() }
+      else if(!e.shiftKey && document.activeElement === last) { e.preventDefault(); first?.focus() }
+    }
+    document.addEventListener('keydown', key)
+    return () => { document.body.style.overflow = previousOverflow; document.removeEventListener('keydown', key); previousFocus?.focus?.() }
+  }, [expanded])
   useEffect(() => {
     const media = matchMedia('(prefers-reduced-motion: reduce)')
     const change = () => setReduced(media.matches)
@@ -62,7 +76,7 @@ export default function InternetWorld() {
     }
     const visibility = () => { if (document.hidden) { stop(); setStatus('Feed suspended · tab hidden') } else start() }
     const observer = new IntersectionObserver(([entry]) => { visible = entry.isIntersecting; if (visible) start(); else { stop(); setStatus('Feed suspended · outside view') } }, { rootMargin: '100px' })
-    observer.observe(section.current); document.addEventListener('visibilitychange', visibility)
+    observer.observe(consoleRef.current); document.addEventListener('visibilitychange', visibility)
     if (paused) setStatus('Feed paused')
     return () => { alive = false; stop(); observer.disconnect(); document.removeEventListener('visibilitychange', visibility) }
   }, [paused])
@@ -103,13 +117,13 @@ export default function InternetWorld() {
     return () => { cancelAnimationFrame(frame); observer.disconnect(); resizeObserver.disconnect(); el.removeEventListener('pointerdown', down); el.removeEventListener('pointermove', move); el.removeEventListener('pointerup', up); el.removeEventListener('pointercancel', up); document.removeEventListener('visibilitychange', visibility) }
   }, [paused, reduced])
   const zoom = amount => { scene.current.zoom = Math.max(.6, Math.min(2.5, scene.current.zoom + amount)) }
-  const expand = () => { if(document.fullscreenElement) document.exitFullscreen?.().catch(() => {}); else consoleRef.current.requestFullscreen?.().catch(() => {}) }
+  const expand = () => setExpanded(value => !value)
   const pan = (x, y) => { scene.current.x += x; scene.current.y += y }
   const reset = () => { Object.assign(scene.current, { x: 0, y: 0, zoom: 1 }); setSelected('all') }
   const shown = events.filter(e => selected === 'all' || e.host === selected)
   return <section className="iw" id="live" ref={section} aria-labelledby="iw-title">
     <header className="iw-heading"><div><p className="iw-eyebrow">GEAMY OBSERVATORY / PLANET NETWORK</p><h2 id="iw-title">A world that<br/><em>never stops connecting.</em></h2></div><p>Explore the infrastructure beneath the Internet.<br/>Real routing observations. A living, illustrated world.</p></header>
-    <div className="iw-console" ref={consoleRef}>
+    <div className={`iw-console ${expanded ? 'iw-expanded' : ''}`} ref={consoleRef} tabIndex={expanded ? -1 : undefined} role={expanded ? 'dialog' : undefined} aria-modal={expanded ? true : undefined} aria-label={expanded ? 'Geamy Internet world' : undefined}>
       <div className="iw-map"><canvas ref={canvas} tabIndex={0} onKeyDown={e => { const direction = {ArrowLeft:[40,0],ArrowRight:[-40,0],ArrowUp:[0,40],ArrowDown:[0,-40]}[e.key]; if(direction){e.preventDefault();pan(...direction)} }} aria-label="Illustrated world of network connections. Drag to move. Live observations are listed in the adjacent panel." />
         <div className="iw-map-top"><span className="iw-badge">GLOBAL NETWORK / 01</span><span className="iw-status" role="status">{status}</span></div>
         <div className="iw-map-label"><span>THE CONNECTED PLANET</span><b>Signals without borders.</b><small>Drag to explore · focus map + arrow keys to pan</small></div>
