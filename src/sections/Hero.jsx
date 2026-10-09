@@ -23,7 +23,7 @@ export default function Hero() {
           <div className="hero-right">
             <div className="hero-art-label"><span>YOUR BUSINESS, REIMAGINED</span><span>01 &mdash; 08</span></div>
             <geamy-universe aria-label="Interactive map of Geamy services" />
-            <div className="hero-art-footer"><span>CHOOSE A SPECIALTY TO EXPLORE</span><a href="#journey">Inside the network ↗</a></div>
+            <div className="hero-art-footer"><span>CHOOSE A SPECIALTY TO EXPLORE</span><a href="#live">Explore the live Internet ↗</a></div>
           </div>
         </div>
         <div className="hero-bottom"><span>FROM THE FIRST CONNECTION TO WHAT COMES NEXT.</span><a href="#services">SCROLL. EXPLORE. IMAGINE. &darr;</a></div>
