@@ -28,3 +28,13 @@
 @media(max-width:760px){.iw-view-switch{left:15px;top:58px}.iw-hover-label{left:18px;top:110px}.iw-map-label b{font-size:24px}.iw-focus-summary{grid-column:1/-1}.iw-map-controls{padding:3px;left:17px;max-width:calc(100% - 34px)}.iw-map-controls button{font-size:9px;padding:8px 7px}.iw-legend{left:20px;bottom:85px}.iw-map-label{bottom:137px}.iw-console.iw-expanded .iw-panel{padding-top:22px}.iw-heading h2{letter-spacing:-1px}}
 @media(prefers-reduced-motion:reduce){.iw button,.iw-event{transition:none}.iw button:hover{translate:none}}
 html[data-motion=off] .iw button,html[data-motion=off] .iw-event{transition:none}
+
+/* The WebGL layer stays behind the accessible picking and annotation canvas. */
+.iw-map{background:radial-gradient(ellipse at 50% 44%,#122d4540,transparent 60%),#030810}
+.iw canvas.iw-webgl{pointer-events:none;opacity:0}
+.iw-console{border:1px solid #283746;box-shadow:0 35px 100px #0008}
+.iw-panel{background:linear-gradient(155deg,#101e2b,#080f18);border-color:#283746}
+.iw-map-label b{font-size:32px;letter-spacing:-1.2px}
+.iw-view-switch,.iw-map-controls{background:#08101ac9;border-color:#33404e}
+.iw-panel-heading b{color:#e6f2ee;font-size:52px;letter-spacing:-3px;font-weight:400}
+@media(max-width:760px){.iw-map-label b{font-size:23px}.iw-panel-heading b{font-size:36px}}

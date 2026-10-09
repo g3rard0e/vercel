@@ -23,11 +23,21 @@ class NetworkJourney extends HTMLElement {
         </div>
       </section>`
     this.abort = new AbortController()
+    if (!this.preview) {
+      this.webglCanvas = document.createElement('canvas')
+      this.webglCanvas.className = 'nj-webgl'; this.webglCanvas.setAttribute('aria-hidden','true')
+      this.querySelector('.nj-viewport').prepend(this.webglCanvas)
+      const signal = this.abort.signal
+      import('./journey-webgl.js').then(({createJourney}) => {
+        if (signal.aborted) return
+        this.accelerated = createJourney(this.webglCanvas); this.paint(); this.schedule()
+      }).catch(() => {})
+    }
     this.media = matchMedia('(prefers-reduced-motion: reduce)')
     this.still = this.media.matches || document.documentElement.dataset.motion === 'off'
     this.target = this.preview ? .38 : 0; this.progress = this.target; this.pointer = { x:0, y:0 }
     this.active = -1; this.visible = false; this.lastFrame = 0
-    this.canvas = this.querySelector('canvas'); this.scene = new NetworkScene(this.canvas, this.preview)
+    this.canvas = this.querySelector('.nj-canvas, .nj-preview-canvas'); this.scene = new NetworkScene(this.canvas, this.preview)
     const on = (target, type, fn, options = {}) => target.addEventListener(type, fn, { ...options, signal:this.abort.signal })
     on(window, 'scroll', () => { if (!this.preview && !this.still) this.readScroll() }, { passive:true })
     on(window, 'resize', () => { this.scene.resize(); this.readScroll(); this.paint() }, { passive:true })
@@ -44,6 +54,7 @@ class NetworkJourney extends HTMLElement {
     if (!this.preview) {
       on(this.canvas, 'click', e => {
         const rect=this.canvas.getBoundingClientRect(), x=e.clientX-rect.left,y=e.clientY-rect.top
+        if (this.accelerated?.ready) return
         const hit = this.scene.hitAreas.find(p => Math.hypot(p.x-x,p.y-y)<p.radius)
         if (hit) this.go(hit.index)
       })
@@ -77,10 +88,12 @@ class NetworkJourney extends HTMLElement {
     window.scrollTo({ top:top+this.target*Math.max(1,this.offsetHeight-innerHeight), behavior:'smooth' })
   }
   setStill(value) {
+    value = value || this.media.matches || document.documentElement.dataset.motion === 'off'
     this.still=value; this.toggleAttribute('data-still',value)
     this.pointer={x:0,y:0}
     if (!this.preview) {
       const button=this.querySelector('.nj-motion')
+      button.disabled=this.media.matches
       button.setAttribute('aria-pressed',String(value)); button.textContent=value ? 'Enable motion' : 'Reduce motion'
       this.querySelector('.nj-instruction').textContent=value ? 'Choose a device to explore at your pace.' : 'Scroll to travel. Move to explore.'
     }
@@ -100,7 +113,13 @@ class NetworkJourney extends HTMLElement {
   }
   paint(seconds=0) {
     if (!this.scene) return
-    this.scene.draw(this.progress,seconds,this.pointer,this.still)
+    if (this.accelerated?.ready) {
+      this.canvas.style.opacity='0'; this.webglCanvas.style.opacity='1'
+      this.accelerated.render(this.progress,seconds,this.pointer,this.still)
+    } else {
+      this.canvas.style.opacity='1'; if(this.webglCanvas)this.webglCanvas.style.opacity='0'
+      this.scene.draw(this.progress,seconds,this.pointer,this.still)
+    }
     if (this.preview) return
     const index=Math.min(5,Math.round(this.progress*5)), stage=STAGES[index]
     this.querySelector('.nj-track span').style.transform=`scaleX(${this.progress})`
@@ -114,6 +133,7 @@ class NetworkJourney extends HTMLElement {
     this.querySelectorAll('[data-stage]').forEach((button,i)=>button.setAttribute('aria-pressed',String(i===index)))
   }
   disconnectedCallback() {
+    this.accelerated?.dispose(); this.accelerated=null
     this.abort?.abort(); this.abort=null; this.intersection?.disconnect(); this.resizeObserver?.disconnect(); cancelAnimationFrame(this.raf); this.raf=0
   }
 }

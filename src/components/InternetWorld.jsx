@@ -8,7 +8,7 @@ import { drawGlobe } from './globe-scene'
 import './InternetWorld.css'
 
 export default function InternetWorld() {
-  const canvas = useRef(null), section = useRef(null), consoleRef = useRef(null), observedTotal = useRef(0), cameraTween = useRef(null)
+  const webglCanvas = useRef(null), webgl = useRef(null), overlay = useRef(null), canvas = useRef(null), section = useRef(null), consoleRef = useRef(null), observedTotal = useRef(0), cameraTween = useRef(null)
   const scene = useRef({ x: 0, y: 0, zoom: 1, globe: true, yaw: -.3, pitch: -.25, parallaxX: 0, parallaxY: 0, pointerX: 0, pointerY: 0, scrollDepth: 0, manual: false, hovered: null, time: 0, pulses: [], attacks: [], selected: 'all', illustrative: true })
   const [status, setStatus] = useState('Waiting for live data'), [events, setEvents] = useState([])
   const [count, setCount] = useState(0), [selected, setSelected] = useState('all')
@@ -16,6 +16,20 @@ export default function InternetWorld() {
   const paused = localPaused || globalPaused
   const [radar, setRadar] = useState({ state: 'loading', locations: [] })
   const [reduced, setReduced] = useState(false), [expanded, setExpanded] = useState(false), [view, setView] = useState('globe'), [hovered, setHovered] = useState(null)
+  useEffect(() => {
+    let alive = true, started = false
+    const observer = new IntersectionObserver(([entry]) => {
+      if (!entry.isIntersecting || started) return
+      started = true
+      import('./globe-webgl.js').then(module => {
+        if (!alive) return
+        webgl.current = module.createGlobe(webglCanvas.current)
+        overlay.current = module.drawGlobeOverlay
+      }).catch(() => {})
+    }, { rootMargin: '200px' })
+    observer.observe(section.current)
+    return () => { alive = false; observer.disconnect(); webgl.current?.dispose(); webgl.current = null }
+  }, [])
   useAtlasMotion(section, scene, paused, reduced, expanded)
   useEffect(() => { if(paused || reduced) cameraTween.current?.kill(); return () => cameraTween.current?.kill() }, [paused, reduced])
   useEffect(() => {
@@ -115,8 +129,15 @@ export default function InternetWorld() {
       const mix = 1 - Math.exp(-Math.max(1, dt) / 180)
       scene.current.parallaxX += ((paused || reduced ? 0 : scene.current.pointerX) - scene.current.parallaxX) * mix
       scene.current.parallaxY += ((paused || reduced ? 0 : scene.current.pointerY) - scene.current.parallaxY) * mix
-      const draw = scene.current.globe ? drawGlobe : drawWorld
-      draw(ctx, el.clientWidth, el.clientHeight, scene.current, paused || reduced)
+      const accelerated = scene.current.globe && webgl.current?.ready
+      webglCanvas.current.style.opacity = accelerated ? '1' : '0'
+      if (accelerated) {
+        webgl.current.render(el.clientWidth, el.clientHeight, scene.current, paused || reduced)
+        overlay.current(ctx, el.clientWidth, el.clientHeight, scene.current, paused || reduced)
+      } else {
+        const draw = scene.current.globe ? drawGlobe : drawWorld
+        draw(ctx, el.clientWidth, el.clientHeight, scene.current, paused || reduced)
+      }
     }
     const loop = t => { if (active && !document.hidden) { if (t - previous > 32) { paint(paused || reduced ? 0 : Math.min(t - previous, 50)); previous = t } frame = requestAnimationFrame(loop) } }
     const observer = new IntersectionObserver(([e]) => { active = e.isIntersecting; cancelAnimationFrame(frame); if (active) { previous = performance.now(); frame = requestAnimationFrame(loop) } })
@@ -163,7 +184,7 @@ export default function InternetWorld() {
   return <section className="iw" id="live" ref={section} aria-labelledby="iw-title">
     <header className="iw-heading"><div><p className="iw-eyebrow">GEAMY OBSERVATORY / PLANET NETWORK</p><h2 id="iw-title">A world that<br/><em>never stops connecting.</em></h2></div><p>Explore the infrastructure beneath the Internet.<br/>Real routing observations. A living, illustrated world.</p></header>
     <div className={`iw-console ${expanded ? 'iw-expanded' : ''}`} ref={consoleRef} tabIndex={expanded ? -1 : undefined} role={expanded ? 'dialog' : undefined} aria-modal={expanded ? true : undefined} aria-label={expanded ? 'Geamy Internet world' : undefined}>
-      <div className="iw-map"><canvas ref={canvas} tabIndex={0} onKeyDown={e => { const direction = {ArrowLeft:[40,0],ArrowRight:[-40,0],ArrowUp:[0,40],ArrowDown:[0,-40]}[e.key]; if(direction){e.preventDefault();pan(...direction)} }} aria-label="Illustrated world of network connections. Drag to rotate the globe or move the map, click a collector or use the observation selector. Live observations are listed in the adjacent panel." />
+      <div className="iw-map"><canvas ref={webglCanvas} className="iw-webgl" aria-hidden="true"/><canvas ref={canvas} tabIndex={0} onKeyDown={e => { const direction = {ArrowLeft:[40,0],ArrowRight:[-40,0],ArrowUp:[0,40],ArrowDown:[0,-40]}[e.key]; if(direction){e.preventDefault();pan(...direction)} }} aria-label="Illustrated world of network connections. Drag to rotate the globe or move the map, click a collector or use the observation selector. Live observations are listed in the adjacent panel." />
         <div className="iw-map-top"><span className="iw-badge">GEAMY / NETWORK ATLAS</span><span className="iw-status" role="status">{status}</span></div>
         <div className="iw-view-switch" role="group" aria-label="Camera view"><button aria-pressed={view === 'globe'} onClick={() => changeView('globe')}>Globe</button><button aria-pressed={view === 'perspective'} onClick={() => changeView('perspective')}>Perspective</button><button aria-pressed={view === 'plan'} onClick={() => changeView('plan')}>Plan view</button></div>
         {hovered && <div className="iw-hover-label">{collectors.find(c => c.id === hovered)?.name} · click to explore</div>}
@@ -180,6 +201,6 @@ export default function InternetWorld() {
         <div className="iw-threat"><span className="iw-eyebrow">NETWORK ATTACKS / CLOUDFLARE RADAR</span>{radar.state === 'ready' ? <><b>Observed origin distribution · last 24h</b><small>Dataset updated: {new Date(radar.lastUpdated).toLocaleString()}<br/>Window: {new Date(radar.startTime).toLocaleString()} → {new Date(radar.endTime).toLocaleString()}<br/>Confidence: {radar.confidence ?? 'not supplied'}/5</small>{radar.locations.slice(0, 3).map(l => <p key={l.code}>{l.name}<strong>{l.share.toFixed(2)}%</strong></p>)}</> : <><b>{radar.state === 'unconfigured' ? 'Attack source not connected' : radar.state === 'loading' ? 'Checking attack source…' : 'Attack source unavailable'}</b><small>{radar.state === 'unconfigured' ? 'Live attack data requires a private Radar API token. No attacks are simulated.' : 'No attack statistics are displayed until the source is available.'}</small></>}</div>
       </aside>
     </div>
-    <div className="iw-method"><p><b>What you are seeing</b> Teal pulses reflect sampled announcements observed by six RIPE RIS collectors, filtered to AS3356. AS paths are logical routes, not packet traces. Cables, hubs and amber packets are illustrative; positions mark collectors, not physical routes. This is a partial observation of the Internet.</p><p><b>Source & freshness</b> <a href="https://ris-live.ripe.net/manual/" target="_blank" rel="noreferrer">RIPE NCC RIS Live ↗</a> · announcements older than two minutes are excluded. Up to ten pulses/second are visualized. <a href="https://radar.cloudflare.com/security/network-layer" target="_blank" rel="noreferrer">Cloudflare Radar ↗</a> supplies aggregated attack origins, polled every five minutes. Country locations do not identify attackers.</p></div>
+    <div className="iw-method"><p><b>What you are seeing</b> Teal pulses reflect sampled announcements observed by six RIPE RIS collectors, filtered to AS3356. AS paths are logical routes, not packet traces. Cables, hubs and amber packets are illustrative; positions mark collectors, not physical routes. This is a partial observation of the Internet.</p><p><b>Source & freshness</b> <a href="https://ris-live.ripe.net/manual/" target="_blank" rel="noreferrer">RIPE NCC RIS Live ↗</a> · announcements older than two minutes are excluded. Up to ten pulses/second are visualized. <a href="https://radar.cloudflare.com/security/network-layer" target="_blank" rel="noreferrer">Cloudflare Radar ↗</a> supplies aggregated attack origins, polled every five minutes. Country locations do not identify attackers. Earth imagery: <a href="https://ssi.solarsystemscope.com/textures/" target="_blank" rel="noreferrer">Solar System Scope / CC BY 4.0 ↗</a>; static imagery, not live satellite data.</p></div>
   </section>
 }

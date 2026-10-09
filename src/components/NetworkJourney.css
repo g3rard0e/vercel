@@ -43,3 +43,9 @@ network-journey[data-fallback] .nj-canvas{display:none}
 }
 @media(max-height:660px) and (min-width:651px){.nj-top{top:78px}.nj-story{top:23%}.nj-kicker{margin-bottom:12px}.nj-title{font-size:32px}.nj-description{font-size:11px}.nj-tags{margin-top:10px}.nj-bottom{bottom:20px}.nj-controls{margin-bottom:10px}}
 
+.nj-webgl{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;opacity:0}
+.nj-viewport{background:radial-gradient(ellipse at 72% 45%,#24365766,transparent 55%),#060b13}
+.nj-controls button:disabled{opacity:.55;cursor:default}
+.nj-viewport:after{content:'';position:absolute;inset:0;pointer-events:none;background:linear-gradient(90deg,#060b13f5 0%,#060b13e8 23%,#060b1300 45%);z-index:1}
+.nj-story,.nj-top,.nj-bottom{z-index:2}
+@media(max-width:650px){.nj-viewport:after{background:linear-gradient(180deg,#060b13 0%,#060b13e8 28%,#060b1300 42%)}}
