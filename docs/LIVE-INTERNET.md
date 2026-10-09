@@ -6,7 +6,7 @@ The Live section is an original illustrated world inspired conceptually by AP Tr
 
 The panel counts accepted announcements received during the browser session. Visuals sample at most ten pulses/second and retain eight recent announcements. Messages older than 120 seconds and malformed/oversized messages are rejected. Teal pulses mark observation collectors. Amber packets, hubs, continents and intercity cables are illustrative, not measured global traffic. No fake events or attack detections enter the panel.
 
-The feed disconnects outside view, in hidden tabs and on pause, with bounded exponential reconnect. Rendering is capped at 30fps/DPR2. Reduced motion disables movement but preserves readings and explicit controls. Drag to pan; click a collector or choose it in the keyboard-accessible selector to fly closer. Perspective/plan, zoom and reset controls are keyboard accessible. Pause and reduced motion make camera changes immediate and disable parallax and staged entrances. No visitor geolocation is collected. Direct browser connections expose normal connection metadata including visitor IP to RIPE.
+The feed disconnects outside view, in hidden tabs and on pause, with bounded exponential reconnect. Rendering is capped at 30fps/DPR2. Reduced motion disables movement but preserves readings and explicit controls. Drag to pan; click a collector or choose it in the keyboard-accessible selector to fly closer. Globe/perspective/plan, zoom and reset controls are keyboard accessible. Pause and reduced motion make camera changes immediate and disable parallax and staged entrances. No visitor geolocation is collected. Direct browser connections expose normal connection metadata including visitor IP to RIPE.
 
 ## Optional attack statistics
 
@@ -21,3 +21,11 @@ Responses are no-store. Arbitrary URLs are never accepted. CSP adds only `wss://
 ## Validation
 
 `npm run build` runs contact, service, routing parser and Radar adapter tests before bundling. Fixtures test contracts and failures, not production observations. Verify recent AS paths in the deployed browser and the actual attack-source state. Mocked Radar tests cannot verify a user's future token.
+
+## Visual direction
+
+The original Geamy globe uses sampled low-detail continent outlines, orthographic spherical projection, raised great-circle schematic connections and front-face picking. Drag or arrow keys rotate it; selecting a collector rotates its city into view. No third-party map assets, textures, telemetry or extra dependencies are loaded. The planar atlas remains available.
+
+Conceptual references reviewed: [11 mois sans toi(t)](https://11moissanstoit.com/) for geographic exploration; [WeEvolveIT](https://weevolveit.com/) for technology storytelling; [Cartier Roadster](https://www.cartier.com/en-us/roadster-universe.html) and [Spyker](https://spykercars.com/) for product-scale composition and lighting; [USAvionix](https://www.usavionix.com/) for technical scene transitions; [Edolus](https://edolus.com/) for planetary scale. No designs, copy, media or source code were copied.
+
+The chapter rail uses normal hash anchors and tracks the current section. GSAP adds clipped line entrances and bounded hero parallax; pause and reduced-motion preference revert these effects without hiding content.

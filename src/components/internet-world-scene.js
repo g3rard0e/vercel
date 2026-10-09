@@ -1,7 +1,7 @@
 import { collectors } from './live-network'
 import { worldProjection } from './world-camera'
 // Original low-detail geographic illustration. All links are schematic.
-const continents = [
+export const continents = [
   [[-168,65],[-140,71],[-123,61],[-110,69],[-90,73],[-60,53],[-55,46],[-80,25],[-88,15],[-105,23],[-117,32],[-130,52],[-168,65]],
   [[-73,60],[-52,60],[-20,75],[-42,83],[-65,80]],
   [[-82,12],[-67,10],[-50,1],[-35,-6],[-45,-23],[-62,-55],[-75,-45],[-81,-5]],
@@ -11,12 +11,12 @@ const continents = [
   [[112,-12],[135,-11],[153,-23],[146,-39],[115,-35]],
   [[95,5],[120,1],[141,-9],[129,-9],[104,-6]], [[46,-13],[50,-15],[46,-26],[43,-23]], [[166,-35],[178,-40],[170,-47]],
 ]
-const hubs = [...collectors, ...[
+export const hubs = [...collectors, ...[
   [-122,37,'West coast'],[-80,26,'Miami'],[-99,19,'Mexico'],[-70,-33,'Santiago'],[-77,-12,'Lima'],[-58,-34,'Buenos Aires'],
   [2,49,'Paris'],[8,50,'Frankfurt'],[18,59,'Stockholm'],[-9,39,'Lisbon'],[37,56,'Moscow'],[31,30,'Cairo'],[3,7,'Lagos'],[37,-1,'Nairobi'],[55,25,'Dubai'],[73,19,'Mumbai'],[77,29,'Delhi'],[104,1,'Singapore'],[114,22,'Hong Kong'],[121,31,'Shanghai'],[127,37,'Seoul'],[151,-34,'Sydney'],[115,-32,'Perth'],[174,-37,'Auckland'],[-21,64,'Reykjavik'],[-123,49,'Vancouver'],[-79,44,'Toronto'],[-74,5,'Bogotá']
 ].map(([lon,lat,name]) => ({lon,lat,name}))]
-const links = hubs.flatMap((n,i) => [1,3,7].filter(step => i + step < hubs.length).map(step => [i,i+step]))
-const countryCenters = {US:[-98,39],GB:[-2,54],NL:[5,52],DE:[10,51],FR:[2,47],BR:[-52,-10],JP:[138,37],ZA:[25,-29],CN:[104,35],IN:[79,22],RU:[100,60],CA:[-105,56],AU:[134,-25],SG:[104,1],HK:[114,22],KR:[128,36],ID:[118,-3],TR:[35,39],VN:[106,16],IR:[54,32],UA:[32,49],PL:[19,52],IT:[12,43],ES:[-4,40],MX:[-102,24],AR:[-64,-35],CL:[-71,-33],CO:[-74,4],TH:[101,15],PK:[69,30],BD:[90,24],TW:[121,24],SE:[16,62],NO:[9,61],FI:[26,64],CH:[8,47],IE:[-8,53],AE:[54,24],SA:[45,24],EG:[30,27],NG:[8,10],KE:[38,0],IL:[35,31],RO:[25,46],CZ:[15,50],PT:[-8,40],BE:[4,51],AT:[14,48],PH:[122,12],MY:[102,4],NZ:[173,-41]}
+export const links = hubs.flatMap((n,i) => [1,3,7].filter(step => i + step < hubs.length).map(step => [i,i+step]))
+export const countryCenters = {US:[-98,39],GB:[-2,54],NL:[5,52],DE:[10,51],FR:[2,47],BR:[-52,-10],JP:[138,37],ZA:[25,-29],CN:[104,35],IN:[79,22],RU:[100,60],CA:[-105,56],AU:[134,-25],SG:[104,1],HK:[114,22],KR:[128,36],ID:[118,-3],TR:[35,39],VN:[106,16],IR:[54,32],UA:[32,49],PL:[19,52],IT:[12,43],ES:[-4,40],MX:[-102,24],AR:[-64,-35],CL:[-71,-33],CO:[-74,4],TH:[101,15],PK:[69,30],BD:[90,24],TW:[121,24],SE:[16,62],NO:[9,61],FI:[26,64],CH:[8,47],IE:[-8,53],AE:[54,24],SA:[45,24],EG:[30,27],NG:[8,10],KE:[38,0],IL:[35,31],RO:[25,46],CZ:[15,50],PT:[-8,40],BE:[4,51],AT:[14,48],PH:[122,12],MY:[102,4],NZ:[173,-41]}
 const stars = Array.from({ length: 95 }, (_, i) => ({ x: ((i * 127.73) % 997) / 997, y: ((i * 61.19) % 991) / 991, alpha: .12 + (i % 5) * .04 }))
 const fiberColors = ['#5debd6', '#9890ff', '#62aedc']
 

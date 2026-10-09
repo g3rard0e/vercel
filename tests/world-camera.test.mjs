@@ -25,3 +25,19 @@ test('camera flights center every collector and reset an unknown selection', () 
   }
   assert.deepEqual(collectorCamera(390,420,{},'all'),{x:0,y:0,zoom:1,yaw:-.1,pitch:.65})
 })
+
+test('globe hides rear collectors from picking and flights reveal each selected city',()=>{
+  for(const [width,height] of [[390,420],[1400,900]]) {
+    const scene={x:0,y:0,zoom:1,yaw:-.3,pitch:-.25,globe:true}
+    const project=worldProjection(width,height,scene)
+    const tokyo=collectors.find(c=>c.id==='rrc06'),rear=project(tokyo.lon,tokyo.lat,2)
+    assert.notEqual(hitCollector(width,height,scene,...rear)?.id,tokyo.id)
+    for(const c of collectors){
+      const camera={...scene,...collectorCamera(width,height,scene,c.id)}
+      const [x,y]=worldProjection(width,height,camera)(c.lon,c.lat,2)
+      assert.ok(Math.abs(x-width*.5)<1e-8)
+      assert.ok(Math.abs(y-height*.46)<1e-8)
+      assert.equal(hitCollector(width,height,camera,x,y)?.id,c.id)
+    }
+  }
+})
