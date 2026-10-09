@@ -222,3 +222,10 @@ html[data-motion=off] .reveal,html[data-motion=off] .reveal-left,html[data-motio
  .gx-universe{height:390px}.gx-satellite{width:65px;min-height:60px;border-radius:12px;gap:7px}.gx-satellite>.gx-icon{width:22px;height:22px}.gx-satellite>span{font-size:5px}.sat-0,.sat-4{left:calc(50% - 32px)}.sat-2{right:0}.sat-6{left:0}.gx-prism{scale:.76}.gx-orbit-label{font-size:5px;left:26%;top:67%}.gx-universe-note{font-size:5px;bottom:0}.gx-universe-ring{left:12%;width:76%;top:18%}.ur-2{left:25%;width:52%}.gx-motion-switch{font-size:8px;padding:8px 11px}
 }
 @media(prefers-reduced-motion:reduce){.gx-art,.gx-universe{transform:none!important}.gx-world-copy{opacity:1!important;transform:none!important}}
+.gx-network-core{position:absolute;left:50%;top:47%;width:420px;height:350px;transform:translate(-50%,-50%);pointer-events:none;z-index:2}
+.gx-network-core canvas{position:absolute;inset:0;width:100%;height:100%}
+.gx-core-fallback{position:absolute;top:45%;left:35%;font:600 27px var(--font-display,sans-serif);letter-spacing:3px;color:#454477}
+.gx-network-core:has(canvas) .gx-core-fallback{display:none}
+.gx-universe-ring{opacity:.3}.gx-universe-wires{opacity:.25}.gx-orbit-label{display:none}
+.gx-satellite{z-index:3;box-shadow:0 12px 35px #53689a13,inset 0 1px 0 #ffffffba}
+@media(max-width:760px){.gx-network-core{width:300px;height:285px}}

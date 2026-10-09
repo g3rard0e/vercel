@@ -72,3 +72,9 @@ All API responses include no-store and defensive headers. Text is normalized to 
 ### Live Internet observatory
 
 Live RIPE NCC routing observations drive the illustrated worldwide network. The optional attack layer requires a server-side `RADAR_API_TOKEN`; otherwise the source is shown as disconnected. See [sources, limits and configuration](docs/LIVE-INTERNET.md).
+
+### 3D artwork and performance
+
+The hero switch, globe and scroll journey use locally bundled Three.js. Their render loops stop outside the viewport and while the tab is hidden. Decorative movement honors the global pause control and `prefers-reduced-motion`; journey stage controls remain available without scrolling. WebGL initialization/context failure falls back to the existing canvas artwork (hero uses a text fallback). No external rendering scripts or texture CDN are required by CSP.
+
+Earth textures are static artwork from Solar System Scope / INOVE, licensed under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/), with attribution in the observatory and `public/textures/CREDITS.md`. Geographic connections and packets are illustrations; RIPE announcements and optional Radar statistics retain their separate source labels. These textures do not provide live satellite imagery.
