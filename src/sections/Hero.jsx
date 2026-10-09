@@ -8,7 +8,7 @@ export default function Hero() {
         <div className="container hero-inner">
           <div className="hero-left">
             <p className="hero-eyebrow"><span /> GEAMY SERVICES / MIAMI + REMOTE</p>
-            <h1 className="hero-title">Your business.<br />Connected.<br /><span>In full motion.</span></h1>
+            <h1 className="hero-title" aria-label="Your business. Connected. In full motion."><span className="hero-title-line"><span>Your business.</span></span><span className="hero-title-line"><span>Connected.</span></span><span className="hero-title-line hero-title-accent"><span>In full motion.</span></span></h1>
             <p className="hero-sub">Networks. Cloud. Security. Cameras. Websites.<br />The systems behind your next chapter, connected by one technology partner.</p>
             <div className="hero-actions">
               <a className="btn-primary" href="#services">Explore the possibilities <span>↗</span></a>

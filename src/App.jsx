@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import Navbar from './components/Navbar'
 import Footer from './components/Footer'
+import ExperienceDirection from './components/ExperienceDirection'
 import Hero from './sections/Hero'
 import InternetWorld from './components/InternetWorld'
 import About from './sections/About'
@@ -38,6 +39,7 @@ export default function App() {
         <About /><Terms /><Contact />
       </main>
       <Footer />
+      <ExperienceDirection />
       <div className="gx-global-motion"><geamy-motion /></div>
     </>
   )
