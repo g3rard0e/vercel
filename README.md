@@ -68,3 +68,7 @@ GitHub deploys both Vercel (`project-97cwd`) and Cloudflare Pages (`geamy-servic
 Both runtimes limit the actual body byte stream before parsing. Pages `_routes.json` restricts function invocation to `/api/*`. Without `ALLOWED_ORIGINS`, only `https://geamyservices.com` and `https://www.geamyservices.com` are trusted. Configure exact preview origins explicitly; entries must be HTTPS origins without paths or trailing slashes (HTTP localhost is allowed for local development). Origin is an anti-abuse check, not authentication.
 
 All API responses include no-store and defensive headers. Text is normalized to NFC and escaped for HTML; phone format is validated. Mail delivery tests mock Graph; a successful live API submission establishes Graph acceptance, not inbox delivery.
+
+### Live Internet observatory
+
+Live RIPE NCC routing observations drive the illustrated worldwide network. The optional attack layer requires a server-side `RADAR_API_TOKEN`; otherwise the source is shown as disconnected. See [sources, limits and configuration](docs/LIVE-INTERNET.md).

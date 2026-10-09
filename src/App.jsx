@@ -2,6 +2,7 @@ import { useEffect } from 'react'
 import Navbar from './components/Navbar'
 import Footer from './components/Footer'
 import Hero from './sections/Hero'
+import InternetWorld from './components/InternetWorld'
 import About from './sections/About'
 import Terms from './sections/Terms'
 import Contact from './sections/Contact'
@@ -30,6 +31,7 @@ export default function App() {
       <Navbar />
       <main id="main" className="gx-page" style={{ position: 'relative', zIndex: 1 }}>
         <Hero />
+        <InternetWorld />
         <geamy-experiences id="services" />
         <div className="gx-deep-dive"><span>GO ONE LAYER DEEPER</span><h2>Follow a single connection.</h2><p>Scroll through the hardware behind the experience, or continue to meet Geamy.</p><a href="#about">Meet your technology partner &darr;</a></div>
         <network-journey id="journey" />
