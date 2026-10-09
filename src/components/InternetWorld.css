@@ -8,3 +8,23 @@
 .iw-console.iw-expanded{position:fixed;inset:0;z-index:10000;height:100dvh;background:#071722}.iw-console.iw-expanded .iw-map{min-height:100dvh}@media(max-width:760px){.iw-console.iw-expanded .iw-map{min-height:70dvh}}
 
 .gx-page:has(.iw-expanded){z-index:10001!important}
+
+/* Atlas design system: luminous fibers, restrained glass, tactile controls. */
+.iw{background:radial-gradient(ellipse at 20% 0%,#18203866,transparent 55%),#050c17}
+.iw-console{border-color:#33465f;box-shadow:0 32px 100px #020511bb,0 0 80px #6577bb0a;border-radius:18px}
+.iw-panel{background:linear-gradient(145deg,#122337ee,#0a1425);border-color:#35465a}
+.iw-panel-heading b{font-variant-numeric:tabular-nums;letter-spacing:-2px;color:#aaffdf}
+.iw-map-top{align-items:center;line-height:1.5}.iw-badge{letter-spacing:2px;color:#9aaed1}.iw-status{padding-left:14px;position:relative}
+.iw-status:before{content:'';position:absolute;left:0;top:5px;width:5px;height:5px;border-radius:50%;background:#81ddc9;box-shadow:0 0 10px #81ddc955}
+.iw-view-switch{position:absolute;top:62px;left:22px;display:flex;gap:3px;padding:4px;border:1px solid #35465f;background:#0d1828cc;border-radius:10px;backdrop-filter:blur(14px)}
+.iw-view-switch button{font-size:10px;padding:8px 10px;border-color:transparent;background:transparent;color:#8ea4ba;border-radius:6px}
+.iw-view-switch button[aria-pressed=true]{background:#293e55;color:#c1fae8;box-shadow:0 2px 7px #0005}
+.iw button{transition:background .2s,border-color .2s,box-shadow .2s,translate .2s}.iw button:hover{background:#294761;border-color:#7ca6b1;box-shadow:0 4px 16px #0004;translate:0 -1px}.iw button:active{translate:0 0}
+.iw-map-controls{padding:5px;border:1px solid #3a5062;border-radius:12px;background:#0a1524cc;backdrop-filter:blur(12px)}.iw-map-controls button{border-color:#395467;background:#162c40}
+.iw-focus-summary{display:grid;gap:6px;padding:12px;border:1px solid #305066;border-radius:8px;background:#19304455}.iw-focus-summary span{font:11px monospace;color:#9fddcc}.iw-focus-summary small{font:9px monospace;color:#8baab9}
+.iw-event{padding:12px 2px;transition:background .2s}.iw-event:hover{background:#1c374349}.iw-hover-label{position:absolute;top:115px;left:26px;font:10px monospace;color:#ffe0b0;background:#182738e8;border:1px solid #8d79585e;border-radius:6px;padding:9px 11px;pointer-events:none}
+.iw-map-label b{font-family:inherit;font-size:29px;font-weight:500;letter-spacing:-1px}.iw-map-label small{font:10px monospace;color:#8fa9bc}.iw-legend{color:#b2c2d4}.iw-heading h2{color:#edf3ff}.iw-heading h2 em{background:linear-gradient(110deg,#a8ffe1,#8cb5f0);background-clip:text;-webkit-background-clip:text;color:transparent}
+.iw-console.iw-expanded{border-radius:0}.iw-console.iw-expanded .iw-panel{padding-top:28px}
+@media(max-width:760px){.iw-view-switch{left:15px;top:58px}.iw-hover-label{left:18px;top:110px}.iw-map-label b{font-size:24px}.iw-focus-summary{grid-column:1/-1}.iw-map-controls{padding:3px;left:17px;max-width:calc(100% - 34px)}.iw-map-controls button{font-size:9px;padding:8px 7px}.iw-legend{left:20px;bottom:85px}.iw-map-label{bottom:137px}.iw-console.iw-expanded .iw-panel{padding-top:22px}.iw-heading h2{letter-spacing:-1px}}
+@media(prefers-reduced-motion:reduce){.iw button,.iw-event{transition:none}.iw button:hover{translate:none}}
+html[data-motion=off] .iw button,html[data-motion=off] .iw-event{transition:none}

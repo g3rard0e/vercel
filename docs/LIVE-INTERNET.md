@@ -6,7 +6,7 @@ The Live section is an original illustrated world inspired conceptually by AP Tr
 
 The panel counts accepted announcements received during the browser session. Visuals sample at most ten pulses/second and retain eight recent announcements. Messages older than 120 seconds and malformed/oversized messages are rejected. Teal pulses mark observation collectors. Amber packets, hubs, continents and intercity cables are illustrative, not measured global traffic. No fake events or attack detections enter the panel.
 
-The feed disconnects outside view, in hidden tabs and on pause, with bounded exponential reconnect. Rendering is capped at 30fps/DPR2. Reduced motion disables movement but preserves readings and explicit controls. Drag to pan; keyboard-accessible buttons zoom/reset. No visitor geolocation is collected. Direct browser connections expose normal connection metadata including visitor IP to RIPE.
+The feed disconnects outside view, in hidden tabs and on pause, with bounded exponential reconnect. Rendering is capped at 30fps/DPR2. Reduced motion disables movement but preserves readings and explicit controls. Drag to pan; click a collector or choose it in the keyboard-accessible selector to fly closer. Perspective/plan, zoom and reset controls are keyboard accessible. Pause and reduced motion make camera changes immediate and disable parallax and staged entrances. No visitor geolocation is collected. Direct browser connections expose normal connection metadata including visitor IP to RIPE.
 
 ## Optional attack statistics
 
@@ -16,7 +16,7 @@ Set **server-only** `RADAR_API_TOKEN` in Cloudflare Pages Production and Vercel 
 
 `GET /api/network` proxies exactly `/radar/attacks/layer3/top/locations/origin?dateRange=1d&limit=20&format=JSON` from Cloudflare. This gives percentage distribution of layer 3 attack origins over the latest day, not individual live attacks or a complete global count. Polling and per-runtime caching/coalescing occur every five minutes, with a 128KiB response limit and eight-second timeout. Failures back off five minutes. Data older than an hour is rejected. Fields are allowlisted; tokens/upstream errors are never returned. The actual dataset timestamp and date window are preserved. Country markers are approximate; countries do not identify attackers. Unmapped countries remain in textual statistics.
 
-Responses are no-store. Arbitrary URLs are never accepted. CSP adds only `wss://ris-live.ripe.net`; Radar is server-to-server. No dependency was added.
+Responses are no-store. Arbitrary URLs are never accepted. CSP adds only `wss://ris-live.ripe.net`; Radar is server-to-server. GSAP and its bundled ScrollTrigger plugin provide staged entrances, scroll-linked perspective and eased camera flights. No animation CDN is required.
 
 ## Validation
 
