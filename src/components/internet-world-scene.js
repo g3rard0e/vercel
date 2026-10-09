@@ -1,4 +1,5 @@
 import { collectors } from './live-network'
+import { worldProjection } from './world-camera'
 // Original low-detail geographic illustration. All links are schematic.
 const continents = [
   [[-168,65],[-140,71],[-123,61],[-110,69],[-90,73],[-60,53],[-55,46],[-80,25],[-88,15],[-105,23],[-117,32],[-130,52],[-168,65]],
@@ -16,47 +17,91 @@ const hubs = [...collectors, ...[
 ].map(([lon,lat,name]) => ({lon,lat,name}))]
 const links = hubs.flatMap((n,i) => [1,3,7].filter(step => i + step < hubs.length).map(step => [i,i+step]))
 const countryCenters = {US:[-98,39],GB:[-2,54],NL:[5,52],DE:[10,51],FR:[2,47],BR:[-52,-10],JP:[138,37],ZA:[25,-29],CN:[104,35],IN:[79,22],RU:[100,60],CA:[-105,56],AU:[134,-25],SG:[104,1],HK:[114,22],KR:[128,36],ID:[118,-3],TR:[35,39],VN:[106,16],IR:[54,32],UA:[32,49],PL:[19,52],IT:[12,43],ES:[-4,40],MX:[-102,24],AR:[-64,-35],CL:[-71,-33],CO:[-74,4],TH:[101,15],PK:[69,30],BD:[90,24],TW:[121,24],SE:[16,62],NO:[9,61],FI:[26,64],CH:[8,47],IE:[-8,53],AE:[54,24],SA:[45,24],EG:[30,27],NG:[8,10],KE:[38,0],IL:[35,31],RO:[25,46],CZ:[15,50],PT:[-8,40],BE:[4,51],AT:[14,48],PH:[122,12],MY:[102,4],NZ:[173,-41]}
-export function drawWorld(ctx,w,h,scene,still) {
-  ctx.clearRect(0,0,w,h)
-  const scale = Math.min(w/380,h/215) * scene.zoom
-  const angle = -.11 + (still ? 0 : Math.sin(scene.time/22000)*.025)
-  const project = (lon,lat,z=0) => {
-    const x=lon*scale, y=-lat*scale*1.15
-    return [w*.5+scene.x+x*Math.cos(angle)-y*Math.sin(angle), h*.55+scene.y+(x*Math.sin(angle)+y*Math.cos(angle))*.8-z*scale]
+const stars = Array.from({ length: 95 }, (_, i) => ({ x: ((i * 127.73) % 997) / 997, y: ((i * 61.19) % 991) / 991, alpha: .12 + (i % 5) * .04 }))
+const fiberColors = ['#5debd6', '#9890ff', '#62aedc']
+
+export function drawWorld(ctx, w, h, scene, still) {
+  ctx.clearRect(0, 0, w, h)
+  const project = worldProjection(w, h, scene)
+  const gradient = ctx.createRadialGradient(w * .5, h * .48, 0, w * .5, h * .48, w * .75)
+  gradient.addColorStop(0, '#142d43'); gradient.addColorStop(.55, '#091827'); gradient.addColorStop(1, '#030914')
+  ctx.fillStyle = gradient; ctx.fillRect(0, 0, w, h)
+  for (const star of stars) { ctx.fillStyle = `rgba(146,176,213,${star.alpha})`; ctx.fillRect(star.x * w, star.y * h, 1, 1) }
+  const line = (points, color, width = 1) => {
+    ctx.beginPath(); points.forEach((p, i) => i ? ctx.lineTo(...p) : ctx.moveTo(...p)); ctx.strokeStyle = color; ctx.lineWidth = width; ctx.stroke()
   }
-  const gradient=ctx.createRadialGradient(w*.5,h*.5,0,w*.5,h*.5,w*.7)
-  gradient.addColorStop(0,'#102c36'); gradient.addColorStop(1,'#040c14'); ctx.fillStyle=gradient; ctx.fillRect(0,0,w,h)
-  const line = (points,color,width=1) => {ctx.beginPath();points.forEach((p,i)=>i?ctx.lineTo(...p):ctx.moveTo(...p));ctx.strokeStyle=color;ctx.lineWidth=width;ctx.stroke()}
-  // Floating geographic plate and coordinate mesh.
-  const plate=[[-180,-65],[180,-65],[180,85],[-180,85],[-180,-65]].map(p=>project(...p,-5))
-  ctx.fillStyle='#071722';ctx.beginPath();plate.forEach((p,i)=>i?ctx.lineTo(...p):ctx.moveTo(...p));ctx.fill();line(plate,'#29404b',2)
-  for(let lon=-180;lon<=180;lon+=15)line([project(lon,-65),project(lon,85)],'#18303b',.6)
-  for(let lat=-60;lat<=80;lat+=15)line([project(-180,lat),project(180,lat)],'#18303b',.6)
-  for(const polygon of continents){const points=polygon.map(p=>project(...p));ctx.beginPath();points.forEach((p,i)=>i?ctx.lineTo(...p):ctx.moveTo(...p));ctx.closePath();ctx.fillStyle='#173f47';ctx.fill();ctx.strokeStyle='#39727b';ctx.lineWidth=1;ctx.stroke();line(points.map(p=>[p[0],p[1]+5]),'#0a2632',3)}
-  // Two-stroke tubing and lifted Bezier bridges, deliberately schematic.
-  links.forEach(([i,j],index)=>{
-    const a=project(hubs[i].lon,hubs[i].lat,3),b=project(hubs[j].lon,hubs[j].lat,3)
-    const lift=Math.min(70,Math.hypot(a[0]-b[0],a[1]-b[1])*.2)
-    const c=[(a[0]+b[0])/2,(a[1]+b[1])/2-lift]
-    const cable=(color,width)=>{ctx.beginPath();ctx.moveTo(...a);ctx.quadraticCurveTo(...c,...b);ctx.strokeStyle=color;ctx.lineWidth=width;ctx.stroke()}
-    cable('#06121b',5);cable(index%3===0?'#477f83':'#295263',1.2)
-    if(scene.illustrative){const t=still?.45:(scene.time/8000+index*.137)%1;const x=(1-t)**2*a[0]+2*(1-t)*t*c[0]+t*t*b[0], y=(1-t)**2*a[1]+2*(1-t)*t*c[1]+t*t*b[1];ctx.fillStyle='#ffb65f';ctx.fillRect(x-1.7,y-1.7,3.4,3.4)}
+  const polygon = (points, fill, stroke) => {
+    ctx.beginPath(); points.forEach((p, i) => i ? ctx.lineTo(...p) : ctx.moveTo(...p)); ctx.closePath(); ctx.fillStyle = fill; ctx.fill()
+    if (stroke) { ctx.strokeStyle = stroke; ctx.lineWidth = 1; ctx.stroke() }
+  }
+  // Perspective lattice suspended above a shadow plane.
+  const corners = [[-180, -63], [180, -63], [180, 85], [-180, 85]]
+  polygon(corners.map(p => project(...p, -8)), '#040d18', '#172d41')
+  polygon(corners.map(p => project(...p, -2)), '#0b1d2a88', '#335066')
+  for (let lon = -180; lon <= 180; lon += 12) line([project(lon, -63), project(lon, 85)], '#31486144', .6)
+  for (let lat = -60; lat <= 80; lat += 12) line([project(-180, lat), project(180, lat)], '#31486144', .6)
+  continents.forEach((land, index) => {
+    polygon(land.map(p => project(...p, -1)), '#102535', '#244155')
+    polygon(land.map(p => project(...p, 2)), index % 2 ? '#194750' : '#1a384d', '#50858b')
+    // Small surface circuit traces, clipped to each continent.
+    ctx.save(); ctx.beginPath(); land.map(p => project(...p, 2.2)).forEach((p, i) => i ? ctx.lineTo(...p) : ctx.moveTo(...p)); ctx.closePath(); ctx.clip()
+    for (let lon = -165; lon < 170; lon += 10) line([project(lon, -60, 2.3), project(lon, 80, 2.3)], '#8fcfc118', .8)
+    for (let lat = -50; lat < 80; lat += 10) line([project(-170, lat, 2.3), project(170, lat, 2.3)], '#8fcfc118', .8)
+    ctx.restore()
   })
-  const now=Date.now()
-  hubs.forEach((n,i)=>{
-    const p=project(n.lon,n.lat,4),base=project(n.lon,n.lat)
-    line([base,p],'#89c6c5',1)
-    ctx.fillStyle=i<6?'#66e8d1':'#416d80';ctx.fillRect(p[0]-4,p[1]-5,8,6);ctx.fillStyle='#122d3b';ctx.fillRect(p[0]-4,p[1]+1,8,5)
-    if(i<6){ctx.strokeStyle=scene.selected===n.id?'#ffb65f':'#57b7b4';ctx.strokeRect(p[0]-7,p[1]-8,14,16);ctx.font='10px monospace';ctx.fillStyle='#b7dedb';ctx.fillText(n.name.toUpperCase(),p[0]+9,p[1]-5)}
+  // Project lifted fibers in world space; geographical routes remain illustrative.
+  links.forEach(([i, j], index) => {
+    const a = hubs[i], b = hubs[j], distance = Math.hypot(a.lon - b.lon, a.lat - b.lat)
+    const lift = Math.min(43, 8 + distance * .13)
+    const at = t => project(a.lon + (b.lon - a.lon) * t, a.lat + (b.lat - a.lat) * t, 7 + Math.sin(Math.PI * t) * lift)
+    const points = Array.from({ length: 25 }, (_, k) => at(k / 24))
+    const active = scene.selected === 'all' || a.id === scene.selected || b.id === scene.selected
+    ctx.globalAlpha = active ? .75 : .14
+    line(points.map(p => [p[0], p[1] + 3]), '#02070c', 4)
+    line(points, '#123046', 3.5); line(points, fiberColors[index % 3], active ? 1.25 : .7)
+    if (scene.illustrative && active) {
+      const t = still ? .45 : (scene.time / (6000 + index % 5 * 700) + index * .137) % 1
+      for (let trail = 5; trail >= 0; trail--) {
+        const point = at(Math.max(0, t - trail * .009))
+        ctx.globalAlpha = (.8 - trail * .12) * (active ? 1 : .2); ctx.fillStyle = '#ffca83'; ctx.fillRect(point[0] - 1.5, point[1] - 1.5, 3, 3)
+      }
+      const point = at(t); ctx.shadowColor = '#ffbd73'; ctx.shadowBlur = 9; ctx.fillStyle = '#ffe9bb'; ctx.fillRect(point[0] - 1.5, point[1] - 1.5, 3, 3); ctx.shadowBlur = 0
+    }
+    ctx.globalAlpha = 1
   })
-  scene.pulses.forEach(p=>{
-    if(scene.selected!=='all'&&p.host!==scene.selected)return
-    const c=collectors.find(n=>n.id===p.host);if(!c)return
-    if(now-p.created>=4500)return
-    const pos=project(c.lon,c.lat,4), progress=still?.5:Math.min(1,(now-p.created)/4500)
-    if(progress>=1)return
-    ctx.beginPath();ctx.ellipse(...pos,8+progress*32,(8+progress*32)*.65,0,0,Math.PI*2);ctx.strokeStyle=`rgba(101,255,215,${1-progress})`;ctx.lineWidth=2;ctx.stroke()
-    ctx.fillStyle='#adffed';ctx.fillRect(pos[0]-3,pos[1]-3,6,6)
+  const now = Date.now()
+  // Isometric router and server towers with status LEDs.
+  hubs.forEach((node, i) => {
+    const tall = i < 6 ? 8 : 6, base = project(node.lon, node.lat, 2), top = project(node.lon, node.lat, tall)
+    ctx.globalAlpha = scene.selected === 'all' || node.id === scene.selected || node.id === scene.hovered ? 1 : .4
+    const size = i < 6 ? 6 : 3.5
+    polygon([[base[0]-size,base[1]], [base[0],base[1]+size*.5], [base[0],top[1]+size*.5], [top[0]-size,top[1]]], '#15394c', '#3b7183')
+    polygon([[base[0],base[1]+size*.5], [base[0]+size,base[1]], [top[0]+size,top[1]], [top[0],top[1]+size*.5]], '#091f34', '#3b7183')
+    polygon([[top[0]-size,top[1]], [top[0],top[1]-size*.5], [top[0]+size,top[1]], [top[0],top[1]+size*.5]], '#326f80', '#77b4b7')
+    ctx.shadowColor = i < 6 ? '#69ffe0' : '#8c93ff'; ctx.shadowBlur = i < 6 ? 12 : 0; ctx.fillStyle = i < 6 ? '#94ffe4' : '#b2adff'; ctx.fillRect(top[0]-1.5,top[1]-1.5,3,3); ctx.shadowBlur = 0
+    if (i < 6) {
+      const selected = node.id === scene.selected || node.id === scene.hovered
+      const labelX = top[0] + (i === 1 ? -80 : 12), labelY = top[1] + (i === 1 ? 19 : -18)
+      line([top, [labelX + (i === 1 ? 60 : 0), labelY + 3]], selected ? '#ffd196' : '#5b9d9a88', .8)
+      ctx.font = '10px monospace'; ctx.fillStyle = selected ? '#ffe0b0' : '#a0d6ce'; ctx.fillText(node.name.toUpperCase(), labelX, labelY)
+      if (selected) { ctx.strokeStyle = '#ffcc87'; ctx.lineWidth = 1.5; ctx.strokeRect(top[0]-10,top[1]-10,20,20) }
+    }
+    ctx.globalAlpha = 1
   })
-  scene.attacks.forEach(a=>{const c=countryCenters[a.code];if(!c)return;const p=project(...c,6);ctx.beginPath();ctx.arc(...p,5+Math.sqrt(a.share),0,Math.PI*2);ctx.fillStyle='#ff685238';ctx.fill();ctx.strokeStyle='#ff6852';ctx.stroke();ctx.fillStyle='#ffb7ab';ctx.font='11px monospace';ctx.fillText(`${a.code} ${a.share.toFixed(1)}%`,p[0]+10,p[1])})
+  // Only genuine accepted observations generate teal rings.
+  const latest = new Map()
+  scene.pulses.forEach(p => { if (now-p.created<4500) latest.set(p.host,p) })
+  for (const p of latest.values()) {
+    if (scene.selected !== 'all' && p.host !== scene.selected) continue
+    const collector = collectors.find(n => n.id === p.host); if (!collector) continue
+    const progress = still ? .35 : Math.min(1,(now-p.created)/4500), position = project(collector.lon,collector.lat,8)
+    ctx.beginPath(); ctx.ellipse(...position,12+progress*25,(12+progress*25)*.55,0,0,Math.PI*2)
+    ctx.strokeStyle = `rgba(107,255,216,${.9-progress*.65})`; ctx.lineWidth = 1.6; ctx.stroke()
+    ctx.shadowColor = '#66ffd9'; ctx.shadowBlur = 13; ctx.fillStyle = '#aaffeb'; ctx.fillRect(position[0]-2,position[1]-2,4,4); ctx.shadowBlur = 0
+  }
+  scene.attacks.forEach(a => {
+    const center = countryCenters[a.code]; if (!center) return
+    const point = project(...center,10); ctx.beginPath(); ctx.arc(...point,5+Math.sqrt(a.share),0,Math.PI*2)
+    ctx.fillStyle = '#ff685238'; ctx.fill(); ctx.strokeStyle = '#ff6852'; ctx.stroke(); ctx.fillStyle = '#ffb7ab'; ctx.font = '11px monospace'; ctx.fillText(`${a.code} ${a.share.toFixed(1)}%`,point[0]+10,point[1])
+  })
 }

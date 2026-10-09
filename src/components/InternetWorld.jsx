@@ -1,17 +1,22 @@
 import { useEffect, useRef, useState } from 'react'
 import { collectors, parseRoutingMessage } from './live-network'
+import { gsap } from 'gsap'
+import { useAtlasMotion } from './useAtlasMotion'
+import { collectorCamera, hitCollector } from './world-camera'
 import { drawWorld } from './internet-world-scene'
 import './InternetWorld.css'
 
 export default function InternetWorld() {
-  const canvas = useRef(null), section = useRef(null), consoleRef = useRef(null), observedTotal = useRef(0)
-  const scene = useRef({ x: 0, y: 0, zoom: 1, time: 0, pulses: [], attacks: [], selected: 'all', illustrative: true })
+  const canvas = useRef(null), section = useRef(null), consoleRef = useRef(null), observedTotal = useRef(0), cameraTween = useRef(null)
+  const scene = useRef({ x: 0, y: 0, zoom: 1, yaw: -.1, pitch: .65, parallaxX: 0, parallaxY: 0, pointerX: 0, pointerY: 0, scrollDepth: 0, manual: false, hovered: null, time: 0, pulses: [], attacks: [], selected: 'all', illustrative: true })
   const [status, setStatus] = useState('Waiting for live data'), [events, setEvents] = useState([])
   const [count, setCount] = useState(0), [selected, setSelected] = useState('all')
   const [localPaused, setPaused] = useState(false), [globalPaused, setGlobalPaused] = useState(document.documentElement.dataset.motion === 'off'), [fiber, setFiber] = useState(true)
   const paused = localPaused || globalPaused
   const [radar, setRadar] = useState({ state: 'loading', locations: [] })
-  const [reduced, setReduced] = useState(false), [expanded, setExpanded] = useState(false)
+  const [reduced, setReduced] = useState(false), [expanded, setExpanded] = useState(false), [view, setView] = useState('perspective'), [hovered, setHovered] = useState(null)
+  useAtlasMotion(section, scene, paused, reduced, expanded)
+  useEffect(() => { if(paused || reduced) cameraTween.current?.kill(); return () => cameraTween.current?.kill() }, [paused, reduced])
   useEffect(() => {
     if (!expanded) return
     const previousFocus = document.activeElement, previousOverflow = document.body.style.overflow
@@ -44,7 +49,7 @@ export default function InternetWorld() {
   useEffect(() => {
     let socket, retry, idle, alive = true, visible = false, attempt = 0, total = observedTotal.current, lastPublish = 0, lastPulse = 0, lastMessage = 0
     let recent = []
-    const stop = () => { clearTimeout(retry); clearInterval(idle); if (socket) { socket.onclose = null; socket.close(); socket = null } }
+    const stop = () => { clearTimeout(retry); clearInterval(idle); if (socket) { socket.onopen = null; socket.onmessage = null; socket.onerror = null; socket.onclose = null; socket.close(); socket = null } }
     const start = () => {
       if (!alive || !visible || document.hidden || paused || socket) return
       setStatus('Connecting to RIPE NCC')
@@ -102,37 +107,72 @@ export default function InternetWorld() {
   useEffect(() => {
     const el = canvas.current, ctx = el.getContext('2d')
     if (!ctx) return
-    let frame, active = false, previous = 0, dragging = null
+    let frame, active = false, previous = 0, dragging = null, moved = 0, currentHover = null
     const resize = () => { const r = el.getBoundingClientRect(), dpr = Math.min(devicePixelRatio || 1, 2); el.width = r.width * dpr; el.height = r.height * dpr; ctx.setTransform(dpr, 0, 0, dpr, 0, 0); paint(0) }
-    const paint = dt => { scene.current.time += dt; drawWorld(ctx, el.clientWidth, el.clientHeight, scene.current, paused || reduced) }
+    const paint = dt => {
+      scene.current.time += dt
+      const mix = 1 - Math.exp(-Math.max(1, dt) / 180)
+      scene.current.parallaxX += ((paused || reduced ? 0 : scene.current.pointerX) - scene.current.parallaxX) * mix
+      scene.current.parallaxY += ((paused || reduced ? 0 : scene.current.pointerY) - scene.current.parallaxY) * mix
+      drawWorld(ctx, el.clientWidth, el.clientHeight, scene.current, paused || reduced)
+    }
     const loop = t => { if (active && !document.hidden) { if (t - previous > 32) { paint(paused || reduced ? 0 : Math.min(t - previous, 50)); previous = t } frame = requestAnimationFrame(loop) } }
     const observer = new IntersectionObserver(([e]) => { active = e.isIntersecting; cancelAnimationFrame(frame); if (active) { previous = performance.now(); frame = requestAnimationFrame(loop) } })
     const resizeObserver = new ResizeObserver(resize); resizeObserver.observe(el); observer.observe(el)
     const visibility = () => { cancelAnimationFrame(frame); if (!document.hidden && active) { previous = performance.now(); frame = requestAnimationFrame(loop) } }
-    const down = e => { dragging = [e.clientX, e.clientY]; el.setPointerCapture(e.pointerId) }
-    const move = e => { if (!dragging) return; scene.current.x += e.clientX - dragging[0]; scene.current.y += e.clientY - dragging[1]; dragging = [e.clientX, e.clientY] }
-    const up = () => { dragging = null }
-    el.addEventListener('pointerdown', down); el.addEventListener('pointermove', move); el.addEventListener('pointerup', up); el.addEventListener('pointercancel', up); document.addEventListener('visibilitychange', visibility)
+    const point = e => { const r = el.getBoundingClientRect(); return [e.clientX - r.left, e.clientY - r.top] }
+    const down = e => { cameraTween.current?.kill(); dragging = [e.clientX, e.clientY]; moved = 0; el.setPointerCapture(e.pointerId) }
+    const move = e => {
+      const [x, y] = point(e)
+      if (dragging) {
+        const dx = e.clientX - dragging[0], dy = e.clientY - dragging[1]
+        moved += Math.abs(dx) + Math.abs(dy); scene.current.manual = true; scene.current.scrollDepth = 0
+        scene.current.x += dx; scene.current.y += dy; dragging = [e.clientX, e.clientY]
+        return
+      }
+      if (e.pointerType === 'mouse') {
+        scene.current.pointerX = (x / el.clientWidth - .5) * .06
+        scene.current.pointerY = (y / el.clientHeight - .5) * .07
+      }
+      const hit = hitCollector(el.clientWidth, el.clientHeight, scene.current, x, y)
+      if(currentHover !== (hit?.id || null)) { currentHover = hit?.id || null; scene.current.hovered = currentHover; setHovered(currentHover); el.style.cursor = hit ? 'pointer' : 'grab' }
+    }
+    const up = e => { if(dragging && moved < 6) { const [x,y] = point(e), hit = hitCollector(el.clientWidth,el.clientHeight,scene.current,x,y); if(hit) chooseCollector(hit.id) } dragging = null }
+    const cancel = () => { dragging = null }
+    const leave = () => { scene.current.pointerX = 0; scene.current.pointerY = 0; scene.current.hovered = null; currentHover = null; setHovered(null) }
+    el.addEventListener('pointerdown', down); el.addEventListener('pointermove', move); el.addEventListener('pointerup', up); el.addEventListener('pointercancel', cancel); el.addEventListener('pointerleave', leave); document.addEventListener('visibilitychange', visibility)
     resize()
-    return () => { cancelAnimationFrame(frame); observer.disconnect(); resizeObserver.disconnect(); el.removeEventListener('pointerdown', down); el.removeEventListener('pointermove', move); el.removeEventListener('pointerup', up); el.removeEventListener('pointercancel', up); document.removeEventListener('visibilitychange', visibility) }
+    return () => { cancelAnimationFrame(frame); observer.disconnect(); resizeObserver.disconnect(); el.removeEventListener('pointerdown', down); el.removeEventListener('pointermove', move); el.removeEventListener('pointerup', up); el.removeEventListener('pointercancel', cancel); el.removeEventListener('pointerleave', leave); document.removeEventListener('visibilitychange', visibility) }
   }, [paused, reduced])
-  const zoom = amount => { scene.current.zoom = Math.max(.6, Math.min(2.5, scene.current.zoom + amount)) }
+  const travel = destination => {
+    scene.current.manual = true; scene.current.scrollDepth = 0; scene.current.pointerX = 0; scene.current.pointerY = 0
+    cameraTween.current?.kill()
+    if(paused || reduced) Object.assign(scene.current, destination)
+    else cameraTween.current = gsap.to(scene.current, { ...destination, duration: 1.15, ease: 'power3.inOut', overwrite: 'auto' })
+  }
+  const zoom = amount => travel({ zoom: Math.max(.6, Math.min(2.5, scene.current.zoom + amount)) })
   const expand = () => setExpanded(value => !value)
-  const pan = (x, y) => { scene.current.x += x; scene.current.y += y }
-  const reset = () => { Object.assign(scene.current, { x: 0, y: 0, zoom: 1 }); setSelected('all') }
+  const pan = (x, y) => travel({ x: scene.current.x + x, y: scene.current.y + y })
+  const chooseCollector = id => { setSelected(id); travel(collectorCamera(canvas.current.clientWidth, canvas.current.clientHeight, scene.current, id)) }
+  const changeView = mode => { setView(mode); travel({ pitch: mode === 'plan' ? 0 : .65, yaw: mode === 'plan' ? 0 : -.1 }) }
+  const reset = () => { setSelected('all'); setView('perspective'); travel({ x: 0, y: 0, zoom: 1, yaw: -.1, pitch: .65 }) }
+  const focused = collectors.find(c => c.id === selected)
   const shown = events.filter(e => selected === 'all' || e.host === selected)
   return <section className="iw" id="live" ref={section} aria-labelledby="iw-title">
     <header className="iw-heading"><div><p className="iw-eyebrow">GEAMY OBSERVATORY / PLANET NETWORK</p><h2 id="iw-title">A world that<br/><em>never stops connecting.</em></h2></div><p>Explore the infrastructure beneath the Internet.<br/>Real routing observations. A living, illustrated world.</p></header>
     <div className={`iw-console ${expanded ? 'iw-expanded' : ''}`} ref={consoleRef} tabIndex={expanded ? -1 : undefined} role={expanded ? 'dialog' : undefined} aria-modal={expanded ? true : undefined} aria-label={expanded ? 'Geamy Internet world' : undefined}>
-      <div className="iw-map"><canvas ref={canvas} tabIndex={0} onKeyDown={e => { const direction = {ArrowLeft:[40,0],ArrowRight:[-40,0],ArrowUp:[0,40],ArrowDown:[0,-40]}[e.key]; if(direction){e.preventDefault();pan(...direction)} }} aria-label="Illustrated world of network connections. Drag to move. Live observations are listed in the adjacent panel." />
-        <div className="iw-map-top"><span className="iw-badge">GLOBAL NETWORK / 01</span><span className="iw-status" role="status">{status}</span></div>
-        <div className="iw-map-label"><span>THE CONNECTED PLANET</span><b>Signals without borders.</b><small>Drag to explore · focus map + arrow keys to pan</small></div>
+      <div className="iw-map"><canvas ref={canvas} tabIndex={0} onKeyDown={e => { const direction = {ArrowLeft:[40,0],ArrowRight:[-40,0],ArrowUp:[0,40],ArrowDown:[0,-40]}[e.key]; if(direction){e.preventDefault();pan(...direction)} }} aria-label="Illustrated world of network connections. Drag to move, click a collector or use the observation selector. Live observations are listed in the adjacent panel." />
+        <div className="iw-map-top"><span className="iw-badge">GEAMY / NETWORK ATLAS</span><span className="iw-status" role="status">{status}</span></div>
+        <div className="iw-view-switch" role="group" aria-label="Camera view"><button aria-pressed={view === 'perspective'} onClick={() => changeView('perspective')}>Perspective</button><button aria-pressed={view === 'plan'} onClick={() => changeView('plan')}>Plan view</button></div>
+        {hovered && <div className="iw-hover-label">{collectors.find(c => c.id === hovered)?.name} · click to explore</div>}
+        <div className="iw-map-label"><span>THE CONNECTED PLANET</span><b>Signals without borders.</b><small>Drag to explore · click a collector · arrow keys to pan</small></div>
         <div className="iw-map-controls" aria-label="Map controls"><button onClick={() => zoom(.2)} aria-label="Zoom in">+</button><button onClick={() => zoom(-.2)} aria-label="Zoom out">−</button><button onClick={reset}>Reset</button><button onClick={expand}>{expanded ? 'Exit world' : 'Expand world'}</button><button onClick={() => setPaused(!localPaused)} disabled={globalPaused} aria-pressed={paused}>{globalPaused ? 'Global pause' : paused ? 'Resume' : 'Pause'}</button></div>
         <div className="iw-legend"><span><i/>Illustrated fiber</span><span><i/>Observed BGP update</span><span><i/>Radar attack origin</span></div>
       </div>
       <aside className="iw-panel" aria-label="Observed network activity">
         <div className="iw-panel-heading"><span>LIVE SIGNALS</span><b>{count.toLocaleString()}</b><small>announcements received this session</small></div>
-        <label className="iw-field">Observation point<select value={selected} onChange={e => setSelected(e.target.value)}><option value="all">All six collectors</option>{collectors.map(c => <option key={c.id} value={c.id}>{c.name} / {c.id}</option>)}</select></label>
+        <label className="iw-field">Observation point<select value={selected} onChange={e => chooseCollector(e.target.value)}><option value="all">All six collectors</option>{collectors.map(c => <option key={c.id} value={c.id}>{c.name} / {c.id}</option>)}</select></label>
+        <div className="iw-focus-summary"><span>{focused ? focused.name : 'Six observation points'}</span><small>{focused ? `${focused.id.toUpperCase()} · ${focused.lat.toFixed(2)}° / ${focused.lon.toFixed(2)}°` : 'Select a collector to fly closer.'}</small></div>
         <label className="iw-toggle"><input type="checkbox" checked={fiber} onChange={e => setFiber(e.target.checked)}/> Illustrated packet motion</label>
         <div className="iw-stream" aria-label="Latest sampled announcements">{shown.length ? shown.slice(0, 4).map((e, i) => <div className="iw-event" key={`${e.timestamp}-${i}`}><div><span>{collectors.find(c => c.id === e.host)?.name}</span><time>{new Date(e.timestamp * 1000).toLocaleTimeString()}</time></div><b>{e.path.map(n => `AS${n}`).join(' → ')}</b><small>{e.prefix}</small></div>) : <p className="iw-empty">{paused ? 'Observations paused.' : 'Waiting for observations from this collector.'}<br/>No synthetic events are added to this feed.</p>}</div>
         <div className="iw-threat"><span className="iw-eyebrow">NETWORK ATTACKS / CLOUDFLARE RADAR</span>{radar.state === 'ready' ? <><b>Observed origin distribution · last 24h</b><small>Dataset updated: {new Date(radar.lastUpdated).toLocaleString()}<br/>Window: {new Date(radar.startTime).toLocaleString()} → {new Date(radar.endTime).toLocaleString()}<br/>Confidence: {radar.confidence ?? 'not supplied'}/5</small>{radar.locations.slice(0, 3).map(l => <p key={l.code}>{l.name}<strong>{l.share.toFixed(2)}%</strong></p>)}</> : <><b>{radar.state === 'unconfigured' ? 'Attack source not connected' : radar.state === 'loading' ? 'Checking attack source…' : 'Attack source unavailable'}</b><small>{radar.state === 'unconfigured' ? 'Live attack data requires a private Radar API token. No attacks are simulated.' : 'No attack statistics are displayed until the source is available.'}</small></>}</div>
